@@ -4,7 +4,7 @@ import Security
 class KeychainManager {
     static let shared = KeychainManager()
     
-    private let service = "com.hws.parentmode"
+    private let service = "com.avedevios.memopair"
     private let account = "parentPassword"
     
     private init() {}

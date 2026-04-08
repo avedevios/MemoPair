@@ -1,19 +1,29 @@
 import UIKit
 import LocalAuthentication
+import AudioToolbox
 
 class ViewController: UIViewController {
     
     var collectionView: UICollectionView!
     var cards = [Card]()
     var selectedIndices: [IndexPath] = []
+    var moveCount = 0
+    let movesLabel = UILabel()
+    var timer: Timer?
+    var elapsedSeconds = 0
+    let timerLabel = UILabel()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
+        
+        title = "MemoPair"
         
         let parentButton = UIBarButtonItem(title: "Parent Mode", style: .plain, target: self, action: #selector(authenticateParent))
         navigationItem.rightBarButtonItem = parentButton
         
+        setupMovesLabel()
+        setupTimerLabel()
         setupCards()
         setupCollectionView()
     }
@@ -24,8 +34,12 @@ class ViewController: UIViewController {
         guard let layout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout else { return }
 
         let spacing: CGFloat = layout.minimumInteritemSpacing
-        let lines: CGFloat = 4
-        let columns: CGFloat = 4
+        let count = cards.count
+        guard count > 0 else { return }
+
+        // Find the most square grid layout for the card count
+        let columns = CGFloat(optimalColumns(for: count))
+        let lines = CGFloat(ceil(Double(count) / Double(Int(columns))))
 
         let totalSpacingX = spacing * (columns + 1)
         let totalSpacingY = spacing * (lines + 1)
@@ -38,9 +52,65 @@ class ViewController: UIViewController {
 
         layout.itemSize = CGSize(width: itemWidth, height: itemHeight)
     }
+
+    private func optimalColumns(for count: Int) -> Int {
+        // Find column count that produces the most square grid
+        let sqrt = Int(Double(count).squareRoot())
+        for cols in stride(from: sqrt + 1, through: 2, by: -1) {
+            if count % cols == 0 { return cols }
+        }
+        return max(2, sqrt)
+    }
     
     func setupCards() {
         cards = CardManager.shared.getShuffledCards()
+        moveCount = 0
+        movesLabel.text = "Moves: 0"
+        startTimer()
+    }
+    
+    func startTimer() {
+        timer?.invalidate()
+        elapsedSeconds = 0
+        timerLabel.text = "Time: 0:00"
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            self.elapsedSeconds += 1
+            let minutes = self.elapsedSeconds / 60
+            let seconds = self.elapsedSeconds % 60
+            self.timerLabel.text = String(format: "Time: %d:%02d", minutes, seconds)
+        }
+    }
+    
+    func stopTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+    
+    func setupTimerLabel() {
+        timerLabel.translatesAutoresizingMaskIntoConstraints = false
+        timerLabel.textAlignment = .center
+        timerLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        timerLabel.textColor = .secondaryLabel
+        view.addSubview(timerLabel)
+        
+        NSLayoutConstraint.activate([
+            timerLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            timerLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
+        ])
+    }
+    
+    func setupMovesLabel() {
+        movesLabel.translatesAutoresizingMaskIntoConstraints = false
+        movesLabel.textAlignment = .center
+        movesLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        movesLabel.textColor = .secondaryLabel
+        view.addSubview(movesLabel)
+        
+        NSLayoutConstraint.activate([
+            movesLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            movesLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
     }
     
     func setupCollectionView() {
@@ -50,7 +120,7 @@ class ViewController: UIViewController {
 
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.backgroundColor = .white
+        collectionView.backgroundColor = .systemBackground
         collectionView.register(CardCell.self, forCellWithReuseIdentifier: "Cell")
         collectionView.dataSource = self
         collectionView.delegate = self
@@ -58,7 +128,7 @@ class ViewController: UIViewController {
         view.addSubview(collectionView)
 
         NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            collectionView.topAnchor.constraint(equalTo: movesLabel.bottomAnchor, constant: 8),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
@@ -70,12 +140,17 @@ class ViewController: UIViewController {
         let first = cards[selectedIndices[0].item]
         let second = cards[selectedIndices[1].item]
         
+        moveCount += 1
+        movesLabel.text = "Moves: \(moveCount)"
+        
         if first.pairID == second.pairID {
             cards[selectedIndices[0].item].isMatched = true
             cards[selectedIndices[1].item].isMatched = true
             selectedIndices.removeAll()
+            AudioServicesPlaySystemSound(1025) // match sound
             checkWin()
         } else {
+            AudioServicesPlaySystemSound(1073) // no match sound
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if let firstCell = self.collectionView.cellForItem(at: self.selectedIndices[0]) as? CardCell {
                     firstCell.configure(with: nil, isFaceUp: false, animated: true)
@@ -91,13 +166,67 @@ class ViewController: UIViewController {
     
     func checkWin() {
         if cards.allSatisfy({ $0.isMatched }) {
-            let alert = UIAlertController(title: "You Win!", message: "All pairs matched!", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Play Again", style: .default) { _ in
-                self.setupCards()
-                self.collectionView.reloadData()
-            })
-            present(alert, animated: true)
+            stopTimer()
+            showConfetti()
+            let minutes = elapsedSeconds / 60
+            let seconds = elapsedSeconds % 60
+            let timeStr = String(format: "%d:%02d", minutes, seconds)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                let alert = UIAlertController(title: "You Win! 🎉", message: "Moves: \(self.moveCount)  Time: \(timeStr)", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Play Again", style: .default) { _ in
+                    self.stopConfetti()
+                    self.setupCards()
+                    self.collectionView.reloadData()
+                })
+                self.present(alert, animated: true)
+            }
         }
+    }
+    
+    func showConfetti() {
+        let emitter = CAEmitterLayer()
+        emitter.name = "confettiEmitter"
+        emitter.emitterPosition = CGPoint(x: view.bounds.midX, y: -10)
+        emitter.emitterShape = .line
+        emitter.emitterSize = CGSize(width: view.bounds.width, height: 1)
+        
+        let colors: [UIColor] = [.systemRed, .systemBlue, .systemGreen, .systemYellow, .systemPurple, .systemOrange]
+        emitter.emitterCells = colors.map { color in
+            let cell = CAEmitterCell()
+            cell.birthRate = 8
+            cell.lifetime = 4
+            cell.velocity = 200
+            cell.velocityRange = 80
+            cell.emissionLongitude = .pi
+            cell.emissionRange = .pi / 4
+            cell.spin = 2
+            cell.spinRange = 3
+            cell.scaleRange = 0.3
+            cell.scale = 0.5
+            cell.color = color.cgColor
+            cell.contents = makeConfettiImage()
+            return cell
+        }
+        
+        view.layer.addSublayer(emitter)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            emitter.birthRate = 0
+        }
+    }
+    
+    func stopConfetti() {
+        view.layer.sublayers?.filter { $0.name == "confettiEmitter" }.forEach { $0.removeFromSuperlayer() }
+    }
+    
+    private func makeConfettiImage() -> CGImage? {
+        let size = CGSize(width: 10, height: 6)
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        UIColor.white.setFill()
+        UIBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image?.cgImage
     }
 }
 
@@ -133,6 +262,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     }
     
     func showCardEditor() {
+        stopTimer()
         let editorVC = CardEditorViewController()
         editorVC.delegate = self
         navigationController?.pushViewController(editorVC, animated: true)
@@ -257,7 +387,6 @@ extension ViewController: CardEditorDelegate {
         collectionView.reloadData() // Refresh display
     }
 }
-
 // MARK: - Card Cell
 
 class CardCell: UICollectionViewCell {

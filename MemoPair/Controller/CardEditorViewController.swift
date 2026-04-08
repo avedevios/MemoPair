@@ -33,9 +33,9 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewCard))
         
-        // Add settings button to the right side, next to the add button
+        // Add settings button to the left side
         let settingsButton = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(showSettings))
-        navigationItem.rightBarButtonItems = [settingsButton, navigationItem.rightBarButtonItem!]
+        navigationItem.leftBarButtonItem = settingsButton
     }
 
     func loadCustomPairs() {
@@ -72,7 +72,7 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
         // No popover needed for regular Alert on iPad
         if preferredStyle == .actionSheet {
             if let popover = alert.popoverPresentationController {
-                popover.barButtonItem = navigationItem.leftBarButtonItem ?? navigationItem.rightBarButtonItems?.first
+                popover.barButtonItem = navigationItem.leftBarButtonItem
                 if popover.barButtonItem == nil {
                     popover.sourceView = view
                     popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
@@ -202,6 +202,16 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
                 let updatedPair = CardPair(term: term, match: match, category: "Custom", difficulty: 1)
                 CardManager.shared.updatePair(at: index, with: updatedPair)
             } else {
+                // Check for duplicates before adding
+                let isDuplicate = CardManager.shared.getAllCardPairs().contains {
+                    $0.term.lowercased() == term.lowercased() || $0.match.lowercased() == match.lowercased()
+                }
+                if isDuplicate {
+                    let errorAlert = UIAlertController(title: "Duplicate", message: "A card with this term or match already exists.", preferredStyle: .alert)
+                    errorAlert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                    self.present(errorAlert, animated: true)
+                    return
+                }
                 // Add new pair via CardManager
                 let newPair = CardPair(term: term, match: match, category: "Custom", difficulty: 1)
                 CardManager.shared.addPair(newPair)
