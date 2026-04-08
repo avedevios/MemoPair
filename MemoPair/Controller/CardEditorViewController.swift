@@ -33,13 +33,13 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewCard))
         
-        // Добавляем кнопку настроек в правую часть, рядом с кнопкой добавления
+        // Add settings button to the right side, next to the add button
         let settingsButton = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(showSettings))
         navigationItem.rightBarButtonItems = [settingsButton, navigationItem.rightBarButtonItem!]
     }
 
     func loadCustomPairs() {
-        // Загружаем все пары из CardManager
+        // Load all pairs from CardManager
         customPairs = CardManager.shared.getAllPairs()
     }
 
@@ -52,24 +52,24 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
 
     
     @objc func showSettings() {
-        // На iPad используем обычный Alert, на iPhone - ActionSheet
+        // On iPad use regular Alert, on iPhone use ActionSheet
         let preferredStyle: UIAlertController.Style = UIDevice.current.userInterfaceIdiom == .pad ? .alert : .actionSheet
         
         let alert = UIAlertController(title: "Settings", message: "Choose an option", preferredStyle: preferredStyle)
         
-        // Кнопка изменения пароля
+        // Change password button
         alert.addAction(UIAlertAction(title: "Change Password", style: .default) { [weak self] _ in
             self?.showPasswordChangeAlert()
         })
         
-        // Кнопка сброса к базовым карточкам
+        // Reset to default cards button
         alert.addAction(UIAlertAction(title: "Reset to Default Cards", style: .destructive) { [weak self] _ in
             self?.showResetConfirmation()
         })
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         
-        // На iPad не нужен popover для обычного Alert
+        // No popover needed for regular Alert on iPad
         if preferredStyle == .actionSheet {
             if let popover = alert.popoverPresentationController {
                 popover.barButtonItem = navigationItem.leftBarButtonItem ?? navigationItem.rightBarButtonItems?.first
@@ -111,7 +111,7 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
                   !newPassword.isEmpty,
                   !confirmPassword.isEmpty else { return }
             
-            // Проверяем текущий пароль из Keychain
+            // Verify current password from Keychain
             let savedPassword = KeychainManager.shared.getCurrentPassword()
             
             guard currentPassword == savedPassword else {
@@ -121,7 +121,7 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
                 return
             }
             
-            // Проверяем, что новый пароль совпадает с подтверждением
+            // Verify new password matches confirmation
             guard newPassword == confirmPassword else {
                 let errorAlert = UIAlertController(title: "Error", message: "New passwords do not match.", preferredStyle: .alert)
                 errorAlert.addAction(UIAlertAction(title: "OK", style: .cancel))
@@ -129,7 +129,7 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
                 return
             }
             
-            // Сохраняем новый пароль в Keychain
+            // Save new password to Keychain
             if KeychainManager.shared.savePassword(newPassword) {
                 let successAlert = UIAlertController(title: "Success", message: "Password changed successfully.", preferredStyle: .alert)
                 successAlert.addAction(UIAlertAction(title: "OK", style: .cancel))
@@ -153,14 +153,14 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Reset", style: .destructive) { [weak self] _ in
-            // Сбрасываем к базовым карточкам
+            // Reset to default cards
             CardManager.shared.resetToDefault()
             
-            // Перезагружаем данные
+            // Reload data
             self?.loadCustomPairs()
             self?.tableView.reloadData()
             
-            // Показываем подтверждение
+            // Show confirmation
             let successAlert = UIAlertController(
                 title: "Reset Complete",
                 message: "Cards have been reset to default values.",
@@ -198,16 +198,16 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
                   let match = alert.textFields?[1].text, !match.isEmpty else { return }
 
             if let index = index {
-                // Обновляем существующую пару через CardManager
+                // Update existing pair via CardManager
                 let updatedPair = CardPair(term: term, match: match, category: "Custom", difficulty: 1)
                 CardManager.shared.updatePair(at: index, with: updatedPair)
             } else {
-                // Добавляем новую пару через CardManager
+                // Add new pair via CardManager
                 let newPair = CardPair(term: term, match: match, category: "Custom", difficulty: 1)
                 CardManager.shared.addPair(newPair)
             }
 
-            self.loadCustomPairs() // Перезагружаем данные
+            self.loadCustomPairs() // Reload data
             self.tableView.reloadData()
         }))
 
@@ -234,7 +234,7 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             CardManager.shared.removePair(at: indexPath.row)
-            loadCustomPairs() // Перезагружаем данные
+            loadCustomPairs() // Reload data
             tableView.deleteRows(at: [indexPath], with: .automatic)
         }
     }

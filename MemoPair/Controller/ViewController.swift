@@ -140,7 +140,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     }
     
     @objc func authenticateParent() {
-        // Создаем контекст для биометрической аутентификации
+        // Create biometric authentication context
         let context = LAContext()
         var error: NSError?
 
@@ -160,7 +160,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
                                 switch laError.code {
                                 case .userCancel:
                                     message = "Authentication was cancelled."
-                                    return // Не показываем алерт при отмене
+                                    return // Don't show alert on user cancel
                                 case .userFallback:
                                     message = "User chose to use fallback authentication."
                                     showFallbackOption = true
@@ -234,7 +234,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
                   let password = alert.textFields?.first?.text,
                   !password.isEmpty else { return }
             
-            // Проверяем пароль из Keychain или используем пароль по умолчанию
+            // Check password from Keychain or use default
             let savedPassword = KeychainManager.shared.getCurrentPassword()
             
             if password == savedPassword {
@@ -254,8 +254,8 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
 
 extension ViewController: CardEditorDelegate {
     func didUpdateCards() {
-        setupCards() // Загружает базовые и кастомные пары
-        collectionView.reloadData() // Обновляет отображение
+        setupCards() // Load base and custom pairs
+        collectionView.reloadData() // Refresh display
     }
 }
 

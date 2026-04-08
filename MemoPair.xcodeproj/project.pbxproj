@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		6DD0F65C2F871C5E00F87BAA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6D2CB7C92DACB25A007774FE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6D2CB7D02DACB25A007774FE;
+			remoteInfo = MemoPair;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		6D2CB7D12DACB25A007774FE /* MemoPair.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "MemoPair.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6D2CB7D12DACB25A007774FE /* MemoPair.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MemoPair.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6DD0F6582F871C5E00F87BAA /* MemoPairTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MemoPairTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -26,13 +37,25 @@
 			exceptions = (
 				6D2CB7E32DACB25D007774FE /* Exceptions for "MemoPair" folder in "MemoPair" target */,
 			);
-			path = "MemoPair";
+			path = MemoPair;
+			sourceTree = "<group>";
+		};
+		6DD0F6592F871C5E00F87BAA /* MemoPairTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MemoPairTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		6D2CB7CE2DACB25A007774FE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6DD0F6552F871C5E00F87BAA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -46,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				6D2CB7D32DACB25A007774FE /* MemoPair */,
+				6DD0F6592F871C5E00F87BAA /* MemoPairTests */,
 				6D2CB7D22DACB25A007774FE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				6D2CB7D12DACB25A007774FE /* MemoPair.app */,
+				6DD0F6582F871C5E00F87BAA /* MemoPairTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,12 +101,35 @@
 			fileSystemSynchronizedGroups = (
 				6D2CB7D32DACB25A007774FE /* MemoPair */,
 			);
-			name = "MemoPair";
+			name = MemoPair;
 			packageProductDependencies = (
 			);
-			productName = "MemoPair";
+			productName = MemoPair;
 			productReference = 6D2CB7D12DACB25A007774FE /* MemoPair.app */;
 			productType = "com.apple.product-type.application";
+		};
+		6DD0F6572F871C5E00F87BAA /* MemoPairTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6DD0F6602F871C5E00F87BAA /* Build configuration list for PBXNativeTarget "MemoPairTests" */;
+			buildPhases = (
+				6DD0F6542F871C5E00F87BAA /* Sources */,
+				6DD0F6552F871C5E00F87BAA /* Frameworks */,
+				6DD0F6562F871C5E00F87BAA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6DD0F65D2F871C5E00F87BAA /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				6DD0F6592F871C5E00F87BAA /* MemoPairTests */,
+			);
+			name = MemoPairTests;
+			packageProductDependencies = (
+			);
+			productName = MemoPairTests;
+			productReference = 6DD0F6582F871C5E00F87BAA /* MemoPairTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -90,11 +138,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1630;
-				LastUpgradeCheck = 1630;
+				LastSwiftUpdateCheck = 2640;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					6D2CB7D02DACB25A007774FE = {
 						CreatedOnToolsVersion = 16.3;
+					};
+					6DD0F6572F871C5E00F87BAA = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = 6D2CB7D02DACB25A007774FE;
 					};
 				};
 			};
@@ -113,12 +165,20 @@
 			projectRoot = "";
 			targets = (
 				6D2CB7D02DACB25A007774FE /* MemoPair */,
+				6DD0F6572F871C5E00F87BAA /* MemoPairTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		6D2CB7CF2DACB25A007774FE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6DD0F6562F871C5E00F87BAA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -135,7 +195,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6DD0F6542F871C5E00F87BAA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6DD0F65D2F871C5E00F87BAA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6D2CB7D02DACB25A007774FE /* MemoPair */;
+			targetProxy = 6DD0F65C2F871C5E00F87BAA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		6D2CB7E52DACB25D007774FE /* Debug */ = {
@@ -147,7 +222,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 65DRR277K2;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "MemoPair/Info.plist";
+				INFOPLIST_FILE = MemoPair/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -158,7 +233,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "ave.MemoPair";
+				PRODUCT_BUNDLE_IDENTIFIER = ave.MemoPair;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -179,7 +254,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 65DRR277K2;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "MemoPair/Info.plist";
+				INFOPLIST_FILE = MemoPair/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -190,7 +265,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "ave.MemoPair";
+				PRODUCT_BUNDLE_IDENTIFIER = ave.MemoPair;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -261,6 +336,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -318,8 +394,53 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		6DD0F65E2F871C5E00F87BAA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 65DRR277K2;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.avesoft.MemoPairTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MemoPair.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MemoPair";
+			};
+			name = Debug;
+		};
+		6DD0F65F2F871C5E00F87BAA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 65DRR277K2;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.avesoft.MemoPairTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MemoPair.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/MemoPair";
 			};
 			name = Release;
 		};
@@ -340,6 +461,15 @@
 			buildConfigurations = (
 				6D2CB7E52DACB25D007774FE /* Debug */,
 				6D2CB7E62DACB25D007774FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6DD0F6602F871C5E00F87BAA /* Build configuration list for PBXNativeTarget "MemoPairTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6DD0F65E2F871C5E00F87BAA /* Debug */,
+				6DD0F65F2F871C5E00F87BAA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

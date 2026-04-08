@@ -6,13 +6,13 @@ struct CardPair: Codable {
     let category: String
     let difficulty: Int
     
-    // Вычисляемое свойство для совместимости с существующим кодом
+    // Computed property for compatibility with existing code
     var tuple: (String, String) {
         return (term, match)
     }
 }
 
-// Расширение для совместимости с существующим кодом
+// Extension for compatibility with existing code
 extension Array where Element == CardPair {
     var asTuples: [(String, String)] {
         return self.map { $0.tuple }

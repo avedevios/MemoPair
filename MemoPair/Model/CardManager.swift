@@ -13,10 +13,10 @@ class CardManager {
     // MARK: - Initialization
     
     func loadDefaultCards() {
-        // Загружаем базовые карточки
+        // Load base cards
         loadBaseCards()
         
-        // Загружаем сохраненные карточки или используем базовые
+        // Load saved cards or fall back to defaults
         if let savedPairs = loadSavedPairs() {
             allCardPairs = savedPairs
         } else {
@@ -28,7 +28,7 @@ class CardManager {
         guard let url = Bundle.main.url(forResource: "DefaultCards", withExtension: "plist"),
               let data = try? Data(contentsOf: url),
               let pairs = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [[String: Any]] else {
-            // Fallback к хардкоду, если plist не найден
+            // Fallback to hardcoded cards if plist is not found
             loadFallbackCards()
             return
         }
@@ -45,7 +45,7 @@ class CardManager {
     }
     
     private func loadFallbackCards() {
-        // Fallback данные на случай, если plist не найден
+        // Fallback data in case plist is not found
         defaultCardPairs = [
             CardPair(term: "France", match: "Paris", category: "Geography", difficulty: 1),
             CardPair(term: "Japan", match: "Tokyo", category: "Geography", difficulty: 1),

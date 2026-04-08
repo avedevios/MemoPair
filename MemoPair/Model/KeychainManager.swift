@@ -19,10 +19,10 @@ class KeychainManager {
             kSecValueData as String: password.data(using: .utf8)!
         ]
         
-        // Сначала удаляем существующий пароль
+        // Delete existing password first
         SecItemDelete(query as CFDictionary)
         
-        // Добавляем новый пароль
+        // Add new password
         let status = SecItemAdd(query as CFDictionary, nil)
         return status == errSecSuccess
     }
