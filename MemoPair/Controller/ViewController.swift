@@ -85,7 +85,6 @@ class ViewController: UIViewController {
                 }
                 
                 self.selectedIndices.removeAll()
-                //self.collectionView.reloadData()
             }
         }
     }

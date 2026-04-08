@@ -1,6 +1,6 @@
 //
 //  SceneDelegate.swift
-//  hws-challenge-99
+//  MemoPair
 //
 //  Created by Anton Averianov on 2025-04-13.
 //

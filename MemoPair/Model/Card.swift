@@ -1,11 +1,11 @@
 //
-//  Untitled.swift
-//  hws-challenge-99
+//  Card.swift
+//  MemoPair
 //
 //  Created by Anton Averianov on 2025-04-14.
 //
 
-import UIKit
+import Foundation
 
 struct Card: Equatable {
     let id: UUID = UUID()
