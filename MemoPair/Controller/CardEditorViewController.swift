@@ -110,9 +110,7 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
                   !confirmPassword.isEmpty else { return }
             
             // Verify current password from Keychain
-            let savedPassword = KeychainManager.shared.getCurrentPassword()
-            
-            guard currentPassword == savedPassword else {
+            guard AuthenticationManager.shared.validatePassword(currentPassword) else {
                 let errorAlert = UIAlertController(title: "Error", message: "Current password is incorrect.", preferredStyle: .alert)
                 errorAlert.addAction(UIAlertAction(title: "OK", style: .cancel))
                 self.present(errorAlert, animated: true)

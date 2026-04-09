@@ -1,5 +1,4 @@
 import UIKit
-import LocalAuthentication
 import AudioToolbox
 
 class ViewController: UIViewController {
@@ -276,83 +275,20 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     }
     
     @objc func authenticateParent() {
-        // Create biometric authentication context
-        let context = LAContext()
-        var error: NSError?
-
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "Access Parental Controls") { [weak self] success, authError in
-                DispatchQueue.main.async {
-                    guard let self = self else { return }
-                    
-                    if success {
-                        self.showCardEditor()
-                    } else {
-                        var message = "You could not be verified."
-                        var showFallbackOption = false
-                        
-                        if let authError = authError {
-                            if let laError = authError as? LAError {
-                                switch laError.code {
-                                case .userCancel:
-                                    message = "Authentication was cancelled."
-                                    return // Don't show alert on user cancel
-                                case .userFallback:
-                                    message = "User chose to use fallback authentication."
-                                    showFallbackOption = true
-                                case .biometryNotAvailable:
-                                    message = "Biometric authentication is not available."
-                                    showFallbackOption = true
-                                case .biometryNotEnrolled:
-                                    message = "No biometric authentication is enrolled."
-                                    showFallbackOption = true
-                                case .biometryLockout:
-                                    message = "Biometric authentication is locked out."
-                                    showFallbackOption = true
-                                default:
-                                    message = "Authentication failed with error: \(authError.localizedDescription)"
-                                    showFallbackOption = true
-                                }
-                            } else {
-                                message = "Authentication failed with error: \(authError.localizedDescription)"
-                                showFallbackOption = true
-                            }
-                        }
-                        
-                        let alert = UIAlertController(title: "Authentication Failed", message: message, preferredStyle: .alert)
-                        
-                        if showFallbackOption {
-                            alert.addAction(UIAlertAction(title: "Use Password", style: .default) { [weak self] _ in
-                                self?.showPasswordAuthentication()
-                            })
-                        }
-                        
-                        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                        self.present(alert, animated: true)
-                    }
-                }
+        AuthenticationManager.shared.authenticateWithBiometrics(reason: "Access Parental Controls") { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success:
+                self.showCardEditor()
+            case .failure(let error):
+                guard error.requiresFallback else { return }
+                let alert = UIAlertController(title: "Authentication Failed", message: error.message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Use Password", style: .default) { [weak self] _ in
+                    self?.showPasswordAuthentication()
+                })
+                alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                self.present(alert, animated: true)
             }
-        } else {
-            var message = "Biometric authentication not available."
-            if let error = error {
-                switch error.code {
-                case LAError.biometryNotEnrolled.rawValue:
-                    message = "No biometric authentication is enrolled on this device."
-                case LAError.biometryNotAvailable.rawValue:
-                    message = "Biometric authentication is not available on this device."
-                case LAError.passcodeNotSet.rawValue:
-                    message = "Passcode is not set on this device."
-                default:
-                    message = "Biometric authentication error: \(error.localizedDescription)"
-                }
-            }
-            
-            let alert = UIAlertController(title: "Unavailable", message: message, preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Use Password", style: .default) { [weak self] _ in
-                self?.showPasswordAuthentication()
-            })
-            alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-            present(alert, animated: true)
         }
     }
     
@@ -370,10 +306,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
                   let password = alert.textFields?.first?.text,
                   !password.isEmpty else { return }
             
-            // Check password from Keychain or use default
-            let savedPassword = KeychainManager.shared.getCurrentPassword()
-            
-            if password == savedPassword {
+            if AuthenticationManager.shared.validatePassword(password) {
                 self.showCardEditor()
             } else {
                 let errorAlert = UIAlertController(title: "Incorrect Password", message: "The password you entered is incorrect.", preferredStyle: .alert)
