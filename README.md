@@ -13,7 +13,7 @@ Flip cards and find matching pairs. The game tracks your moves and time, and inc
 - Move counter and timer
 - Confetti animation on win
 - Sound feedback on match/mismatch
-- Parent Mode protected by Face ID / Touch ID with password fallback
+- Parent Mode protected by Face ID / Touch ID with password fallback (password stored in Keychain)
 - Card editor — add, edit, delete pairs
 - Reset to default cards
 - Persistent storage via UserDefaults
