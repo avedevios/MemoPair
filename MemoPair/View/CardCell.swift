@@ -115,7 +115,7 @@ class CardCell: UICollectionViewCell {
             label.text = text
         } else {
             gradientLayer.colors = nil
-            backgroundImageView.image = UIImage(named: "rubashka")
+            backgroundImageView.image = UIImage(named: "cardBack")
             contentView.backgroundColor = .clear
             label.text = ""
             checkmarkLabel.isHidden = true

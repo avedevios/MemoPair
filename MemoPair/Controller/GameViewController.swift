@@ -1,11 +1,11 @@
 //
-//  ViewController.swift
+//  GameViewController.swift
 //  MemoPair
 //
 import UIKit
 import AudioToolbox
 
-class ViewController: UIViewController {
+class GameViewController: UIViewController {
 
     // MARK: - Properties
 
@@ -205,7 +205,7 @@ class ViewController: UIViewController {
 
 // MARK: - GameEngineDelegate
 
-extension ViewController: GameEngineDelegate {
+extension GameViewController: GameEngineDelegate {
 
     func gameEngine(_ engine: GameEngine, didFlipCardAt index: Int) {
         collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
@@ -255,7 +255,7 @@ extension ViewController: GameEngineDelegate {
 
 // MARK: - CollectionView
 
-extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+extension GameViewController: UICollectionViewDataSource, UICollectionViewDelegate {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         engine.cards.count
@@ -276,7 +276,7 @@ extension ViewController: UICollectionViewDataSource, UICollectionViewDelegate {
 
 // MARK: - CardEditorDelegate
 
-extension ViewController: CardEditorDelegate {
+extension GameViewController: CardEditorDelegate {
     func didUpdateCards() {
         startNewGame()
     }
