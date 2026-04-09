@@ -1,3 +1,7 @@
+//
+//  CardEditorViewController.swift
+//  MemoPair
+//
 import UIKit
 
 protocol CardEditorDelegate: AnyObject {
@@ -8,16 +12,17 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
 
     weak var delegate: CardEditorDelegate?
 
-    var customPairs: [(String, String)] = []
-
     let tableView = UITableView(frame: .zero, style: .insetGrouped)
+
+    // Computed — always in sync with CardManager, no local cache
+    private var pairs: [CardPair] { CardManager.shared.getAllCardPairs() }
+
+    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Edit Cards"
         view.backgroundColor = .systemBackground
-
-        loadCustomPairs()
 
         tableView.dataSource = self
         tableView.delegate = self
@@ -36,199 +41,146 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
         navigationItem.rightBarButtonItems = [addButton, settingsButton]
     }
 
-    func loadCustomPairs() {
-        // Load all pairs from CardManager
-        customPairs = CardManager.shared.getAllPairs()
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        delegate?.didUpdateCards()
     }
 
-
+    // MARK: - Actions
 
     @objc func addNewCard() {
         showEditor(for: nil)
     }
-    
 
-    
     @objc func showSettings() {
-        // On iPad use regular Alert, on iPhone use ActionSheet
         let preferredStyle: UIAlertController.Style = UIDevice.current.userInterfaceIdiom == .pad ? .alert : .actionSheet
-        
         let alert = UIAlertController(title: "Settings", message: "Choose an option", preferredStyle: preferredStyle)
-        
-        // Change password button
+
         alert.addAction(UIAlertAction(title: "Change Password", style: .default) { [weak self] _ in
             self?.showPasswordChangeAlert()
         })
-        
-        // Reset to default cards button
         alert.addAction(UIAlertAction(title: "Reset to Default Cards", style: .destructive) { [weak self] _ in
             self?.showResetConfirmation()
         })
-        
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        
-        // No popover needed for regular Alert on iPad
-        if preferredStyle == .actionSheet {
-            if let popover = alert.popoverPresentationController {
-                popover.barButtonItem = navigationItem.rightBarButtonItems?.last
-                if popover.barButtonItem == nil {
-                    popover.sourceView = view
-                    popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
-                }
+
+        if preferredStyle == .actionSheet, let popover = alert.popoverPresentationController {
+            popover.barButtonItem = navigationItem.rightBarButtonItems?.last
+            if popover.barButtonItem == nil {
+                popover.sourceView = view
+                popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
             }
         }
-        
+
         present(alert, animated: true)
     }
-    
-    private func showPasswordChangeAlert() {
-        let alert = UIAlertController(title: "Change Password", message: "Enter password details", preferredStyle: .alert)
-        
-        alert.addTextField { textField in
-            textField.placeholder = "Current Password"
-            textField.isSecureTextEntry = true
-        }
-        
-        alert.addTextField { textField in
-            textField.placeholder = "New Password"
-            textField.isSecureTextEntry = true
-        }
-        
-        alert.addTextField { textField in
-            textField.placeholder = "Confirm New Password"
-            textField.isSecureTextEntry = true
-        }
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Change Password", style: .default) { [weak self] _ in
-            guard let self = self,
-                  let currentPassword = alert.textFields?[0].text,
-                  let newPassword = alert.textFields?[1].text,
-                  let confirmPassword = alert.textFields?[2].text,
-                  !currentPassword.isEmpty,
-                  !newPassword.isEmpty,
-                  !confirmPassword.isEmpty else { return }
-            
-            // Verify current password from Keychain
-            guard AuthenticationManager.shared.validatePassword(currentPassword) else {
-                let errorAlert = UIAlertController(title: "Error", message: "Current password is incorrect.", preferredStyle: .alert)
-                errorAlert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                self.present(errorAlert, animated: true)
-                return
-            }
-            
-            // Verify new password matches confirmation
-            guard newPassword == confirmPassword else {
-                let errorAlert = UIAlertController(title: "Error", message: "New passwords do not match.", preferredStyle: .alert)
-                errorAlert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                self.present(errorAlert, animated: true)
-                return
-            }
-            
-            // Save new password to Keychain
-            if KeychainManager.shared.savePassword(newPassword) {
-                let successAlert = UIAlertController(title: "Success", message: "Password changed successfully.", preferredStyle: .alert)
-                successAlert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                self.present(successAlert, animated: true)
-            } else {
-                let errorAlert = UIAlertController(title: "Error", message: "Failed to save password to Keychain", preferredStyle: .alert)
-                errorAlert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                self.present(errorAlert, animated: true)
-            }
-        })
-        
-        present(alert, animated: true)
-    }
-    
-    private func showResetConfirmation() {
-        let alert = UIAlertController(
-            title: "Reset to Default",
-            message: "This will remove all custom cards and restore the original set. Are you sure?",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Reset", style: .destructive) { [weak self] _ in
-            // Reset to default cards
-            CardManager.shared.resetToDefault()
-            
-            // Reload data
-            self?.loadCustomPairs()
-            self?.tableView.reloadData()
-            
-            // Show confirmation
-            let successAlert = UIAlertController(
-                title: "Reset Complete",
-                message: "Cards have been reset to default values.",
-                preferredStyle: .alert
-            )
-            successAlert.addAction(UIAlertAction(title: "OK", style: .cancel))
-            self?.present(successAlert, animated: true)
-        })
-        
-        present(alert, animated: true)
-    }
+
+    // MARK: - Editor
 
     func showEditor(for index: Int?) {
         let alert = UIAlertController(title: index == nil ? "New Card" : "Edit Card", message: nil, preferredStyle: .alert)
 
-        alert.addTextField { textField in
-            textField.placeholder = "Term"
-            if let index = index {
-                textField.text = self.customPairs[index].0
-            }
+        alert.addTextField {
+            $0.placeholder = "Term"
+            if let index = index { $0.text = self.pairs[index].term }
         }
-
-        alert.addTextField { textField in
-            textField.placeholder = "Match"
-            if let index = index {
-                textField.text = self.customPairs[index].1
-            }
+        alert.addTextField {
+            $0.placeholder = "Match"
+            if let index = index { $0.text = self.pairs[index].match }
         }
 
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
-        alert.addAction(UIAlertAction(title: "Save", style: .default, handler: { [weak self] _ in
-            guard let self = self else { return }
-            guard let term = alert.textFields?[0].text, !term.isEmpty,
+        alert.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
+            guard let self = self,
+                  let term = alert.textFields?[0].text, !term.isEmpty,
                   let match = alert.textFields?[1].text, !match.isEmpty else { return }
 
             if let index = index {
-                // Update existing pair via CardManager
-                let updatedPair = CardPair(term: term, match: match, category: "Custom", difficulty: 1)
-                CardManager.shared.updatePair(at: index, with: updatedPair)
+                CardManager.shared.updatePair(at: index, with: CardPair(term: term, match: match, category: "Custom", difficulty: 1))
             } else {
-                // Check for duplicates before adding
-                let isDuplicate = CardManager.shared.getAllCardPairs().contains {
+                let isDuplicate = self.pairs.contains {
                     $0.term.lowercased() == term.lowercased() || $0.match.lowercased() == match.lowercased()
                 }
-                if isDuplicate {
-                    let errorAlert = UIAlertController(title: "Duplicate", message: "A card with this term or match already exists.", preferredStyle: .alert)
-                    errorAlert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                    self.present(errorAlert, animated: true)
+                guard !isDuplicate else {
+                    let err = UIAlertController(title: "Duplicate", message: "A card with this term or match already exists.", preferredStyle: .alert)
+                    err.addAction(UIAlertAction(title: "OK", style: .cancel))
+                    self.present(err, animated: true)
                     return
                 }
-                // Add new pair via CardManager
-                let newPair = CardPair(term: term, match: match, category: "Custom", difficulty: 1)
-                CardManager.shared.addPair(newPair)
+                CardManager.shared.addPair(CardPair(term: term, match: match, category: "Custom", difficulty: 1))
             }
-
-            self.loadCustomPairs() // Reload data
             self.tableView.reloadData()
-        }))
+        })
 
         present(alert, animated: true)
     }
 
+    // MARK: - Settings helpers
+
+    private func showPasswordChangeAlert() {
+        let alert = UIAlertController(title: "Change Password", message: "Enter password details", preferredStyle: .alert)
+        alert.addTextField { $0.placeholder = "Current Password"; $0.isSecureTextEntry = true }
+        alert.addTextField { $0.placeholder = "New Password"; $0.isSecureTextEntry = true }
+        alert.addTextField { $0.placeholder = "Confirm New Password"; $0.isSecureTextEntry = true }
+
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Change Password", style: .default) { [weak self] _ in
+            guard let self = self,
+                  let current = alert.textFields?[0].text, !current.isEmpty,
+                  let new = alert.textFields?[1].text, !new.isEmpty,
+                  let confirm = alert.textFields?[2].text, !confirm.isEmpty else { return }
+
+            guard AuthenticationManager.shared.validatePassword(current) else {
+                self.showError("Current password is incorrect.")
+                return
+            }
+            guard new == confirm else {
+                self.showError("New passwords do not match.")
+                return
+            }
+            if KeychainManager.shared.savePassword(new) {
+                self.showInfo(title: "Success", message: "Password changed successfully.")
+            } else {
+                self.showError("Failed to save password to Keychain.")
+            }
+        })
+        present(alert, animated: true)
+    }
+
+    private func showResetConfirmation() {
+        let alert = UIAlertController(title: "Reset to Default", message: "This will remove all custom cards and restore the original set. Are you sure?", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Reset", style: .destructive) { [weak self] _ in
+            CardManager.shared.resetToDefault()
+            self?.tableView.reloadData()
+            self?.showInfo(title: "Reset Complete", message: "Cards have been reset to default values.")
+        })
+        present(alert, animated: true)
+    }
+
+    private func showError(_ message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func showInfo(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    // MARK: - TableView
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return customPairs.count
+        pairs.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: nil)
-        let pair = customPairs[indexPath.row]
-        cell.textLabel?.text = pair.0
-        cell.detailTextLabel?.text = pair.1
+        let pair = pairs[indexPath.row]
+        cell.textLabel?.text = pair.term
+        cell.detailTextLabel?.text = pair.match
         return cell
     }
 
@@ -238,15 +190,8 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
     }
 
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            CardManager.shared.removePair(at: indexPath.row)
-            loadCustomPairs() // Reload data
-            tableView.deleteRows(at: [indexPath], with: .automatic)
-        }
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        delegate?.didUpdateCards()
+        guard editingStyle == .delete else { return }
+        CardManager.shared.removePair(at: indexPath.row)
+        tableView.deleteRows(at: [indexPath], with: .automatic)
     }
 }
