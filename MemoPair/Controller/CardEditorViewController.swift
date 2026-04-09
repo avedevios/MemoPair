@@ -31,11 +31,9 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewCard))
-        
-        // Add settings button to the left side
+        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewCard))
         let settingsButton = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(showSettings))
-        navigationItem.leftBarButtonItem = settingsButton
+        navigationItem.rightBarButtonItems = [addButton, settingsButton]
     }
 
     func loadCustomPairs() {
@@ -72,7 +70,7 @@ class CardEditorViewController: UIViewController, UITableViewDataSource, UITable
         // No popover needed for regular Alert on iPad
         if preferredStyle == .actionSheet {
             if let popover = alert.popoverPresentationController {
-                popover.barButtonItem = navigationItem.leftBarButtonItem
+                popover.barButtonItem = navigationItem.rightBarButtonItems?.last
                 if popover.barButtonItem == nil {
                     popover.sourceView = view
                     popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)

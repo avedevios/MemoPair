@@ -538,10 +538,10 @@ class CardCell: UICollectionViewCell {
 }
 
 private extension UIColor {
-    func darker(by factor: CGFloat = 0.25) -> CGColor {
+    func darker(by factor: CGFloat = 0.25) -> UIColor {
         var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         getHue(&h, saturation: &s, brightness: &b, alpha: &a)
-        return UIColor(hue: h, saturation: min(s + 0.1, 1), brightness: max(b - factor, 0), alpha: a).cgColor
+        return UIColor(hue: h, saturation: min(s + 0.1, 1), brightness: max(b - factor, 0), alpha: a)
     }
 }
 
