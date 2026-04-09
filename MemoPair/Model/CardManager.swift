@@ -115,26 +115,13 @@ class CardManager {
     // MARK: - Private Methods
     
     private func savePairs() {
-        let pairsData = allCardPairs.map { [
-            "term": $0.term,
-            "match": $0.match,
-            "category": $0.category,
-            "difficulty": $0.difficulty
-        ] as [String: Any] }
-        UserDefaults.standard.set(pairsData, forKey: "allPairs")
+        guard let data = try? JSONEncoder().encode(allCardPairs) else { return }
+        UserDefaults.standard.set(data, forKey: "allPairs")
     }
     
     private func loadSavedPairs() -> [CardPair]? {
-        guard let savedData = UserDefaults.standard.array(forKey: "allPairs") as? [[String: Any]] else {
-            return nil
-        }
-        
-        return savedData.compactMap { dict in
-            guard let term = dict["term"] as? String,
-                  let match = dict["match"] as? String else { return nil }
-            let category = dict["category"] as? String ?? "Custom"
-            let difficulty = dict["difficulty"] as? Int ?? 1
-            return CardPair(term: term, match: match, category: category, difficulty: difficulty)
-        }
+        guard let data = UserDefaults.standard.data(forKey: "allPairs"),
+              let pairs = try? JSONDecoder().decode([CardPair].self, from: data) else { return nil }
+        return pairs
     }
 }
