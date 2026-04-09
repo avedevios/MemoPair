@@ -350,3 +350,167 @@ struct KeychainManagerTests {
         #expect(first == second)
     }
 }
+
+// MARK: - GameEngine
+
+// Spy delegate to capture GameEngine events
+class GameEngineSpy: GameEngineDelegate {
+    var flippedIndices: [Int] = []
+    var matchedIndices: [Int] = []
+    var mismatchedIndices: [Int] = []
+    var moves: Int = 0
+    var didWin = false
+    var winMoves = 0
+    var winSeconds = 0
+
+    func gameEngine(_ engine: GameEngine, didFlipCardAt index: Int) { flippedIndices.append(index) }
+    func gameEngine(_ engine: GameEngine, didMatchIndices indices: [Int]) { matchedIndices.append(contentsOf: indices) }
+    func gameEngine(_ engine: GameEngine, didMismatchIndices indices: [Int]) { mismatchedIndices.append(contentsOf: indices) }
+    func gameEngine(_ engine: GameEngine, didUpdateMoves moves: Int) { self.moves = moves }
+    func gameEngine(_ engine: GameEngine, didUpdateTime seconds: Int) {}
+    func gameEngineDidWin(_ engine: GameEngine, moves: Int, seconds: Int) { didWin = true; winMoves = moves; winSeconds = seconds }
+}
+
+struct GameEngineTests {
+
+    // Helper: create engine with known cards [A-B pair, C-D pair]
+    func makeEngine() -> (GameEngine, GameEngineSpy) {
+        let cards = [
+            Card(content: "A", pairID: 0),
+            Card(content: "B", pairID: 0),
+            Card(content: "C", pairID: 1),
+            Card(content: "D", pairID: 1)
+        ]
+        let engine = GameEngine()
+        let spy = GameEngineSpy()
+        engine.delegate = spy
+        engine.start(with: cards)
+        return (engine, spy)
+    }
+
+    @Test func selectCardFlipsIt() {
+        let (engine, spy) = makeEngine()
+        engine.selectCard(at: 0)
+        #expect(spy.flippedIndices.contains(0))
+        #expect(engine.selectedIndices.contains(0))
+    }
+
+    @Test func selectSameCardTwiceIgnored() {
+        let (engine, spy) = makeEngine()
+        engine.selectCard(at: 0)
+        engine.selectCard(at: 0)
+        #expect(engine.selectedIndices.count == 1)
+        #expect(spy.flippedIndices.count == 1)
+    }
+
+    @Test func matchingPairMarksCardsMatched() {
+        let (engine, spy) = makeEngine()
+        engine.selectCard(at: 0) // A pairID 0
+        engine.selectCard(at: 1) // B pairID 0
+        #expect(engine.cards[0].isMatched)
+        #expect(engine.cards[1].isMatched)
+        #expect(spy.matchedIndices.contains(0))
+        #expect(spy.matchedIndices.contains(1))
+    }
+
+    @Test func mismatchingPairNotMarkedMatched() {
+        let (engine, spy) = makeEngine()
+        engine.selectCard(at: 0) // A pairID 0
+        engine.selectCard(at: 2) // C pairID 1
+        #expect(!engine.cards[0].isMatched)
+        #expect(!engine.cards[2].isMatched)
+        #expect(spy.mismatchedIndices.contains(0))
+        #expect(spy.mismatchedIndices.contains(2))
+    }
+
+    @Test func moveCountIncreasesAfterEachPair() {
+        let (engine, spy) = makeEngine()
+        engine.selectCard(at: 0)
+        engine.selectCard(at: 1)
+        #expect(spy.moves == 1)
+        #expect(engine.moveCount == 1)
+    }
+
+    @Test func cannotSelectMatchedCard() {
+        let (engine, _) = makeEngine()
+        engine.selectCard(at: 0)
+        engine.selectCard(at: 1) // match
+        let countBefore = engine.selectedIndices.count
+        engine.selectCard(at: 0) // already matched
+        #expect(engine.selectedIndices.count == countBefore)
+    }
+
+    @Test func cannotSelectThirdCardWhileProcessing() {
+        let (engine, _) = makeEngine()
+        engine.selectCard(at: 0) // A
+        engine.selectCard(at: 2) // C — mismatch, now isProcessing = true
+        engine.selectCard(at: 3) // should be ignored
+        #expect(engine.selectedIndices.count == 2)
+    }
+
+    @Test func winTriggeredWhenAllMatched() {
+        let (engine, spy) = makeEngine()
+        engine.selectCard(at: 0)
+        engine.selectCard(at: 1) // match pair 0
+        engine.selectCard(at: 2)
+        engine.selectCard(at: 3) // match pair 1 — win
+        #expect(spy.didWin)
+        #expect(spy.winMoves == 2)
+    }
+
+    @Test func startResetsState() {
+        let (engine, _) = makeEngine()
+        engine.selectCard(at: 0)
+        engine.selectCard(at: 1)
+        let newCards = [Card(content: "X", pairID: 0), Card(content: "Y", pairID: 0)]
+        engine.start(with: newCards)
+        #expect(engine.moveCount == 0)
+        #expect(engine.selectedIndices.isEmpty)
+        #expect(engine.cards.count == 2)
+    }
+
+    @Test func stopDoesNotCrash() {
+        let (engine, _) = makeEngine()
+        engine.stop()
+        #expect(Bool(true))
+    }
+}
+
+// MARK: - AuthenticationManager
+
+struct AuthenticationManagerTests {
+
+    @Test func validatePasswordReturnsTrueForCorrectPassword() {
+        _ = KeychainManager.shared.deletePassword()
+        let defaultPass = KeychainManager.shared.getDefaultPassword()
+        #expect(AuthenticationManager.shared.validatePassword(defaultPass))
+    }
+
+    @Test func validatePasswordReturnsFalseForWrongPassword() {
+        #expect(!AuthenticationManager.shared.validatePassword("wrongpassword"))
+    }
+
+    @Test func authErrorRequiresFallbackForMostErrors() {
+        let errors: [AuthError] = [
+            .fallbackRequested, .biometryUnavailable, .biometryNotEnrolled,
+            .biometryLockout, .passcodeNotSet, .failed("err"), .unknown
+        ]
+        #expect(errors.allSatisfy { $0.requiresFallback })
+    }
+
+    @Test func authErrorUserCancelledDoesNotRequireFallback() {
+        #expect(!AuthError.userCancelled.requiresFallback)
+    }
+
+    @Test func authErrorMessagesAreNotEmptyExceptUserCancelled() {
+        let errors: [AuthError] = [
+            .fallbackRequested, .biometryUnavailable, .biometryNotEnrolled,
+            .biometryLockout, .passcodeNotSet, .failed("test"), .unknown
+        ]
+        #expect(errors.allSatisfy { !$0.message.isEmpty })
+    }
+
+    @Test func authErrorUserCancelledMessageIsEmpty() {
+        #expect(AuthError.userCancelled.message.isEmpty)
+    }
+}
